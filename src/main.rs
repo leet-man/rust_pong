@@ -40,9 +40,9 @@ fn window_conf() -> Conf {
 async fn main() {
     let screen_w = screen_width();
     let screen_h = screen_height();
+    let single_player;
 
     //## Title screen
-    let single_player;
     loop {
         clear_background(BLACK);
 
