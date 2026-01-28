@@ -41,12 +41,63 @@ async fn main() {
     let screen_w = screen_width();
     let screen_h = screen_height();
 
-    //## Mode selection
+    //## Title screen
     let mut single_player = true;
+    let version = "v0.1.0";
     loop {
         clear_background(BLACK);
-        draw_text("Press 1 for Single Player", screen_w / 2.0 - 180.0, screen_h / 2.0 - 20.0, 32.0, WHITE);
-        draw_text("Press 2 for Two Player", screen_w / 2.0 - 160.0, screen_h / 2.0 + 20.0, 32.0, WHITE);
+
+        //### ASCII Art for "PING"
+        let ping_art = [
+            " _ _ ____ ___ _   _  ____  _ _ ",
+            "( | )  _ \\_ _| \\ | |/ ___|( | )",
+            " V V| |_) | ||  \\| | |  _  V V ",
+            "     |  __/| || |\\  | |_| |_    ",
+            "     |_|  |___|_| \\_|\\____(_)   ",
+        ];
+        let mut art_y = screen_h / 2.0 - 120.0;
+        for line in &ping_art {
+            let text_dim = measure_text(line, None, 40, 1.0);
+            let art_x = screen_w / 2.0 - text_dim.width / 2.0;
+            draw_text(line, art_x, art_y, 40.0, WHITE);
+            art_y += 40.0;
+        }
+
+        //### Copyright and version
+        let copyright = "© 2026 leet-man";
+        draw_text(
+            copyright,
+            screen_w / 2.0 - measure_text(copyright, None, 24, 1.0).width / 2.0,
+            screen_h - 60.0,
+            24.0,
+            GRAY,
+        );
+        let version = "vers 0.3.0";
+        draw_text(
+            version,
+            screen_w / 2.0 - measure_text(version, None, 24, 1.0).width / 2.0,
+            screen_h - 30.0,
+            24.0,
+            GRAY,
+        );
+
+        //### Player select
+        draw_text(
+            "Press 1 for Single Player",
+            screen_w / 2.0 - 180.0,
+            screen_h / 2.0 + 80.0,
+            32.0,
+            WHITE,
+        );
+        draw_text(
+            "Press 2 for Two Player",
+            screen_w / 2.0 - 160.0,
+            screen_h / 2.0 + 120.0,
+            32.0,
+            WHITE,
+        );
+
+        //### Input handling for player selection
         if is_key_pressed(KeyCode::Key1) {
             single_player = true;
             break;
@@ -69,6 +120,7 @@ async fn main() {
         y: screen_h / 2.0 - PADDLE_HEIGHT / 2.0,
     };
 
+    //## Initial ball state
     let mut ball = Ball {
         x: screen_w / 2.0,
         y: screen_h / 2.0,
@@ -76,6 +128,7 @@ async fn main() {
         vy: BALL_SPEED * 0.6,
     };
 
+    //## Scores and AI variables
     let mut left_score = 0;
     let mut right_score = 0;
     let mut ai_timer = 0.0;
