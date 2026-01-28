@@ -1,8 +1,10 @@
-``` _ _ ____ ___ _   _  ____  _ _ 
+<pre>
+  _ _ ____ ___ _   _  ____  _ _ 
 ( | )  _ \_ _| \ | |/ ___|( | )
  V V| |_) | ||  \| | |  _  V V 
     |  __/| || |\  | |_| |_    
-    |_|  |___|_| \_|\____(_)``
+    |_|  |___|_| \_|\____(_)
+</pre>
 # How to play
 1. Create `rust_pong` crate.
 3. Inside crate: copy the Cargo.toml and copy the main module inside a `src` directory.
