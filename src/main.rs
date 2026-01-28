@@ -43,7 +43,6 @@ async fn main() {
 
     //## Title screen
     let mut single_player = true;
-    let version = "v0.1.0";
     loop {
         clear_background(BLACK);
 
