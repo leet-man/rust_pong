@@ -42,7 +42,7 @@ async fn main() {
     let screen_h = screen_height();
 
     //## Title screen
-    let mut single_player = true;
+    let single_player;
     loop {
         clear_background(BLACK);
 
