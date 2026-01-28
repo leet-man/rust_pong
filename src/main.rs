@@ -41,6 +41,23 @@ async fn main() {
     let screen_w = screen_width();
     let screen_h = screen_height();
 
+    //## Mode selection
+    let mut single_player = true;
+    loop {
+        clear_background(BLACK);
+        draw_text("Press 1 for Single Player", screen_w / 2.0 - 180.0, screen_h / 2.0 - 20.0, 32.0, WHITE);
+        draw_text("Press 2 for Two Player", screen_w / 2.0 - 160.0, screen_h / 2.0 + 20.0, 32.0, WHITE);
+        if is_key_pressed(KeyCode::Key1) {
+            single_player = true;
+            break;
+        }
+        if is_key_pressed(KeyCode::Key2) {
+            single_player = false;
+            break;
+        }
+        next_frame().await;
+    }
+
     //## Initial game state
     let mut left = Paddle {
         x: 40.0,
@@ -69,25 +86,36 @@ async fn main() {
     loop {
         let dt = get_frame_time();
 
-        //### AI Control for left paddle
-        ai_timer += dt;
-        if ball.vx < 0.0 {
-            if ai_timer >= ai_reaction_time {
-                let target = ball.y + BALL_SIZE / 2.0 + ai_offset;
-                let paddle_center = left.y + PADDLE_HEIGHT / 2.0;
-                let diff = target - paddle_center;
-                let threshold = 6.0;
+        //### Left paddle control
+        if single_player {
+            // AI Control for left paddle
+            ai_timer += dt;
+            if ball.vx < 0.0 {
+                if ai_timer >= ai_reaction_time {
+                    let target = ball.y + BALL_SIZE / 2.0 + ai_offset;
+                    let paddle_center = left.y + PADDLE_HEIGHT / 2.0;
+                    let diff = target - paddle_center;
+                    let threshold = 6.0;
 
-                if diff.abs() > threshold {
-                    if diff > 0.0 {
-                        left.y += AI_PADDLE_SPEED * dt;
-                    } else {
-                        left.y -= AI_PADDLE_SPEED * dt;
+                    if diff.abs() > threshold {
+                        if diff > 0.0 {
+                            left.y += AI_PADDLE_SPEED * dt;
+                        } else {
+                            left.y -= AI_PADDLE_SPEED * dt;
+                        }
                     }
+                    ai_timer = 0.0;
+                    ai_reaction_time = macroquad::rand::gen_range(AI_REACTION_TIME_MIN, AI_REACTION_TIME_MAX);
+                    ai_offset = macroquad::rand::gen_range(-20.0, 20.0);
                 }
-                ai_timer = 0.0;
-                ai_reaction_time = macroquad::rand::gen_range(AI_REACTION_TIME_MIN, AI_REACTION_TIME_MAX);
-                ai_offset = macroquad::rand::gen_range(-20.0, 20.0);
+            }
+        } else {
+            // Two-player: W/S for left paddle
+            if is_key_down(KeyCode::W) {
+                left.y -= PADDLE_SPEED * dt;
+            }
+            if is_key_down(KeyCode::S) {
+                left.y += PADDLE_SPEED * dt;
             }
         }
 
