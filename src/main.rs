@@ -46,7 +46,7 @@ async fn main() {
     loop {
         clear_background(BLACK);
 
-        //### ASCII Art for "PING"
+        //### ASCII Art for "PING."
         let ping_art = [
             " _ _ ____ ___ _   _  ____  _ _ ",
             "( | )  _ \\_ _| \\ | |/ ___|( | )",
