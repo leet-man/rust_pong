@@ -6,8 +6,8 @@ use macroquad::prelude::*;
     const PADDLE_SPEED: f32 = 400.0;
 
     const AI_PADDLE_SPEED: f32 = PADDLE_SPEED;
-    const AI_REACTION_TIME_MIN: f32 = 0.01;
-    const AI_REACTION_TIME_MAX: f32 = 0.09;
+    const AI_REACTION_TIME_MIN: f32 = 0.0;
+    const AI_REACTION_TIME_MAX: f32 = 0.05;
 
     const BALL_SIZE: f32 = 12.0;
     const BALL_SPEED: f32 = 350.0;
@@ -29,8 +29,8 @@ struct Ball {
 fn window_conf() -> Conf {
     Conf {
         window_title: "Rust Pong".to_string(),
-        window_width: 800,
-        window_height: 600,
+        window_width: 1280,
+        window_height: 720,
         ..Default::default()
     }
 }
@@ -40,19 +40,19 @@ fn window_conf() -> Conf {
 async fn main() {
     let screen_w = screen_width();
     let screen_h = screen_height();
+    let single_player;
 
     //## Title screen
-    let single_player;
     loop {
         clear_background(BLACK);
 
-        //### ASCII Art for "PING"
+        //### ASCII Art for *PING!*
         let ping_art = [
-            " _ _ ____ ___ _   _  ____  _ _ ",
-            "( | )  _ \\_ _| \\ | |/ ___|( | )",
-            " V V| |_) | ||  \\| | |  _  V V ",
-            "     |  __/| || |\\  | |_| |_    ",
-            "     |_|  |___|_| \\_|\\____(_)   ",
+            "       ____ ___ _   _  ____ _       ",
+            " __/\\_|  _ \\_ _| \\ | |/ ___| |_ /\\__ ",
+            " \\    / |_) | ||  \\| | |  _| \\    / ",
+            " /_  _\\  __/| || |\\  | |_| |_/_  _\\ ",
+            "   \\/ |_|  |___|_| \\_|\\____(_) \\/   ",
         ];
         let mut art_y = screen_h / 2.0 - 120.0;
         for line in &ping_art {
@@ -132,7 +132,7 @@ async fn main() {
     let mut right_score = 0;
     let mut ai_timer = 0.0;
     let mut ai_reaction_time = macroquad::rand::gen_range(AI_REACTION_TIME_MIN, AI_REACTION_TIME_MAX);
-    let mut ai_offset = macroquad::rand::gen_range(-20.0, 20.0);
+    let mut ai_offset = macroquad::rand::gen_range(-30.0, 30.0);
 
     //## Game loop
     loop {
@@ -140,7 +140,7 @@ async fn main() {
 
         //### Left paddle control
         if single_player {
-            // AI Control for left paddle
+            //#### AI Control for left paddle
             ai_timer += dt;
             if ball.vx < 0.0 {
                 if ai_timer >= ai_reaction_time {
@@ -150,19 +150,27 @@ async fn main() {
                     let threshold = 6.0;
 
                     if diff.abs() > threshold {
-                        if diff > 0.0 {
-                            left.y += AI_PADDLE_SPEED * dt;
-                        } else {
-                            left.y -= AI_PADDLE_SPEED * dt;
+                        let lerp_factor = macroquad::rand::gen_range(0.10, 0.20);
+                        let mut movement = diff * lerp_factor;
+
+                        //##### Clamp to AI_PADDLE_SPEED * dt
+                        let max_movement = AI_PADDLE_SPEED * dt;
+                        if movement > max_movement {
+                            movement = max_movement;
+                        } else if movement < -max_movement {
+                            movement = -max_movement;
                         }
+
+                        left.y += movement;
                     }
                     ai_timer = 0.0;
                     ai_reaction_time = macroquad::rand::gen_range(AI_REACTION_TIME_MIN, AI_REACTION_TIME_MAX);
-                    ai_offset = macroquad::rand::gen_range(-20.0, 20.0);
+                    ai_offset = macroquad::rand::gen_range(-30.0, 30.0);
                 }
             }
-        } else {
-            // Two-player: W/S for left paddle
+        }
+            else {
+            //#### Two-player: W/S for left paddle
             if is_key_down(KeyCode::W) {
                 left.y -= PADDLE_SPEED * dt;
             }
