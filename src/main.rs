@@ -211,23 +211,23 @@ async fn main() {
         let ball_rect = Rect::new(ball.x, ball.y, BALL_SIZE, BALL_SIZE);
 
         //### Paddle collisions
-        if ball_rect.overlaps(&left_rect) && ball.vx < 0.0 {
-            ball.x = left.x + PADDLE_WIDTH;
-            ball.vx = -ball.vx;
-        }
-        if ball_rect.overlaps(&right_rect) && ball.vx > 0.0 {
-            ball.x = right.x - BALL_SIZE;
-            ball.vx = -ball.vx;
-        }
+        handle_paddle_collision(&mut ball, &left, &left_rect, &ball_rect, true);
+        handle_paddle_collision(&mut ball, &right, &right_rect, &ball_rect, false);
 
         //### Scoring
         if ball.x + BALL_SIZE < 0.0 {
             right_score += 1;
             reset_ball(&mut ball, screen_w, screen_h, 1.0);
+            //#### Recenter paddles
+            left.y = screen_h / 2.0 - PADDLE_HEIGHT / 2.0;
+            right.y = screen_h / 2.0 - PADDLE_HEIGHT / 2.0;
         }
         if ball.x > screen_w {
             left_score += 1;
             reset_ball(&mut ball, screen_w, screen_h, -1.0);
+            //#### Recenter paddles
+            left.y = screen_h / 2.0 - PADDLE_HEIGHT / 2.0;
+            right.y = screen_h / 2.0 - PADDLE_HEIGHT / 2.0;
         }
 
         //### Drawing
@@ -283,4 +283,42 @@ fn reset_ball(ball: &mut Ball, screen_w: f32, screen_h: f32, dir: f32) {
     //## Set velocity
     ball.vx = BALL_SPEED * dir * angle.cos();
     ball.vy = BALL_SPEED * angle.sin();
+}
+
+//# Handle paddle collision
+fn handle_paddle_collision(
+    ball: &mut Ball,
+    paddle: &Paddle,
+    paddle_rect: &Rect,
+    ball_rect: &Rect,
+    is_left: bool,
+) {
+    //## Check for collision
+    let hit = if is_left {
+        ball_rect.overlaps(paddle_rect) && ball.vx < 0.0
+    } else {
+        ball_rect.overlaps(paddle_rect) && ball.vx > 0.0
+    };
+
+    if hit {
+        // ### Reverse ball direction
+        if is_left {
+            ball.x = paddle.x + PADDLE_WIDTH;
+        } else {
+            ball.x = paddle.x - BALL_SIZE;
+        }
+        ball.vx = -ball.vx;
+
+        //### Calculate offset from paddle center
+        let paddle_center = paddle.y + PADDLE_HEIGHT / 2.0;
+        let ball_center = ball.y + BALL_SIZE / 2.0;
+        let offset = (ball_center - paddle_center).abs();
+        let norm = (offset / (PADDLE_HEIGHT / 2.0)).min(1.0);
+
+        //### Speed boost for center hits
+        let speed_boost = 1.0 + (1.0 - norm) * 0.25;
+        let max_speed = 700.0;
+        let new_speed = (ball.vx.abs() * speed_boost).min(max_speed);
+        ball.vx = ball.vx.signum() * new_speed;
+    }
 }
