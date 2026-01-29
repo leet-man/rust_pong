@@ -40,13 +40,13 @@ fn window_conf() -> Conf {
 async fn main() {
     let screen_w = screen_width();
     let screen_h = screen_height();
-    let single_player;
 
     //## Title screen
+    let single_player;
     loop {
         clear_background(BLACK);
 
-        //### ASCII Art for "PING."
+        //### ASCII Art for "PING"
         let ping_art = [
             " _ _ ____ ___ _   _  ____  _ _ ",
             "( | )  _ \\_ _| \\ | |/ ___|( | )",
