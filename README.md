@@ -11,6 +11,8 @@ __/\_|  _ \_ _| \ | |/ ___| |_/\__
 4. In terminal, follow path to crate, run `cargo run`.
 5. Enjoy!
 
+Alternatively, you can simply download and run the .exe file.
+
 You may choose between one-player (left paddle, Ai; right paddle, up/down) or two-player (left paddle, w/s; right paddle, up/down).
 
 ## Note: Ensure rust is installed on PC.
