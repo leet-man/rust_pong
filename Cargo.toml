@@ -4,5 +4,13 @@ version = "0.3.0"
 edition = "2021"
 
 [dependencies]
-
 macroquad = "0.4"
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.release]
+opt-level = 3
+debug = false
+lto = true
