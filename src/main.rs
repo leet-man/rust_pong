@@ -6,8 +6,6 @@ use macroquad::prelude::*;
     const PADDLE_SPEED: f32 = 400.0;
 
     const AI_PADDLE_SPEED: f32 = PADDLE_SPEED;
-    const AI_REACTION_TIME_MIN: f32 = 0.0;
-    const AI_REACTION_TIME_MAX: f32 = 0.05;
 
     const BALL_SIZE: f32 = 12.0;
     const BALL_SPEED: f32 = 350.0;
@@ -28,7 +26,7 @@ struct Ball {
 //# Window configuration
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Rust Pong".to_string(),
+        window_title: "Ping!".to_string(),
         window_width: 1280,
         window_height: 720,
         ..Default::default()
@@ -130,9 +128,6 @@ async fn main() {
     //## Scores and AI variables
     let mut left_score = 0;
     let mut right_score = 0;
-    let mut ai_timer = 0.0;
-    let mut ai_reaction_time = macroquad::rand::gen_range(AI_REACTION_TIME_MIN, AI_REACTION_TIME_MAX);
-    let mut ai_offset = macroquad::rand::gen_range(-30.0, 30.0);
 
     //## Game loop
     loop {
@@ -140,32 +135,33 @@ async fn main() {
 
         //### Left paddle control
         if single_player {
-            //#### AI Control for left paddle
-            ai_timer += dt;
+
+            //#### AI Control for left paddle (edge bias)
             if ball.vx < 0.0 {
-                if ai_timer >= ai_reaction_time {
-                    let target = ball.y + BALL_SIZE / 2.0 + ai_offset;
-                    let paddle_center = left.y + PADDLE_HEIGHT / 2.0;
-                    let diff = target - paddle_center;
-                    let threshold = 6.0;
 
-                    if diff.abs() > threshold {
-                        let lerp_factor = macroquad::rand::gen_range(0.10, 0.20);
-                        let mut movement = diff * lerp_factor;
+                // ##### Calculate target position with edge bias and random error
+                let edge_bias = macroquad::rand::gen_range(-1.0, 1.0);
+                let edge_offset = edge_bias * (PADDLE_HEIGHT / 2.0 - BALL_SIZE / 2.0) * 0.7;
+                let random_error = macroquad::rand::gen_range(-15.0, 15.0);
+                let target = ball.y + BALL_SIZE / 2.0 + edge_offset + random_error;
+                let paddle_center = left.y + PADDLE_HEIGHT / 2.0;
+                let diff = target - paddle_center;
+                let threshold = 6.0;
 
-                        //##### Clamp to AI_PADDLE_SPEED * dt
-                        let max_movement = AI_PADDLE_SPEED * dt;
-                        if movement > max_movement {
-                            movement = max_movement;
-                        } else if movement < -max_movement {
-                            movement = -max_movement;
-                        }
+                // ##### Move paddle towards ball
+                if diff.abs() > threshold {
+                    let lerp_factor = macroquad::rand::gen_range(0.10, 0.20);
+                    let mut movement = diff * lerp_factor;
 
-                        left.y += movement;
+                    //###### Clamp to AI_PADDLE_SPEED * dt
+                    let max_movement = AI_PADDLE_SPEED * dt;
+                    if movement > max_movement {
+                        movement = max_movement;
+                    } else if movement < -max_movement {
+                        movement = -max_movement;
                     }
-                    ai_timer = 0.0;
-                    ai_reaction_time = macroquad::rand::gen_range(AI_REACTION_TIME_MIN, AI_REACTION_TIME_MAX);
-                    ai_offset = macroquad::rand::gen_range(-30.0, 30.0);
+
+                    left.y += movement;
                 }
             }
         }
@@ -277,8 +273,13 @@ fn reset_ball(ball: &mut Ball, screen_w: f32, screen_h: f32, dir: f32) {
     ball.x = screen_w / 2.0 - BALL_SIZE / 2.0;
     ball.y = screen_h / 2.0 - BALL_SIZE / 2.0;
 
-    //## Random angle between -45 and 45 degrees
-    let angle = gen_range(-PI / 4.0, PI / 4.0);
+    //## Random angle between -45 and 45 degrees, but not too close to 0 (horizontal)
+    let min_angle = PI / 32.0;
+    let angle = if gen_range(0.0, 1.0) < 0.5 {
+        gen_range(-PI / 4.0, -min_angle)
+    } else {
+        gen_range(min_angle, PI / 4.0)
+    };
 
     //## Set velocity
     ball.vx = BALL_SPEED * dir * angle.cos();
@@ -300,8 +301,8 @@ fn handle_paddle_collision(
         ball_rect.overlaps(paddle_rect) && ball.vx > 0.0
     };
 
+    //## If hit, adjust ball position and velocity
     if hit {
-        // ### Reverse ball direction
         if is_left {
             ball.x = paddle.x + PADDLE_WIDTH;
         } else {
@@ -309,16 +310,16 @@ fn handle_paddle_collision(
         }
         ball.vx = -ball.vx;
 
-        //### Calculate offset from paddle center
+        //### Adjust ball speed based on hit position
         let paddle_center = paddle.y + PADDLE_HEIGHT / 2.0;
         let ball_center = ball.y + BALL_SIZE / 2.0;
         let offset = (ball_center - paddle_center).abs();
         let norm = (offset / (PADDLE_HEIGHT / 2.0)).min(1.0);
 
-        //### Speed boost for center hits
-        let speed_boost = 1.0 + (1.0 - norm) * 0.25;
-        let max_speed = 700.0;
-        let new_speed = (ball.vx.abs() * speed_boost).min(max_speed);
+        //### Multiplier: 0.5 at center, 1.5 at edge
+        let speed_multiplier = 0.5 + norm;
+        let min_speed = BALL_SPEED; // Use the original ball speed as the minimum
+        let new_speed = (ball.vx.abs() * speed_multiplier).max(min_speed);
         ball.vx = ball.vx.signum() * new_speed;
     }
 }
