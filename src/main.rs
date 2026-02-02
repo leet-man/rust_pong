@@ -318,7 +318,7 @@ fn handle_paddle_collision(
 
         //### Multiplier: 0.5 at center, 1.5 at edge
         let speed_multiplier = 0.5 + norm;
-        let min_speed = BALL_SPEED; // Use the original ball speed as the minimum
+        let min_speed = BALL_SPEED;
         let new_speed = (ball.vx.abs() * speed_multiplier).max(min_speed);
         ball.vx = ball.vx.signum() * new_speed;
     }
